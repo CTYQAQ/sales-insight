@@ -6,7 +6,7 @@
 [![CI](https://github.com/CTYQAQ/sales-insight/actions/workflows/ci.yml/badge.svg)](https://github.com/CTYQAQ/sales-insight/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.12+-blue)
 ![React](https://img.shields.io/badge/React-18-61dafb)
-![Tests](https://img.shields.io/badge/tests-82%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-89%20passed-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ![对话助手：意图路由 + RAG 引用](docs/screenshots/02-chat-rag.png)
@@ -23,7 +23,7 @@
 | **规模** | 40 个 API 端点 · 50 个后端模块 · 6 个前端页面 |
 | **Agent** | 3 套：会自我纠错的数据 Agent、意图路由对话 Agent、报告生成 |
 | **RAG** | Milvus + BGE(512d) + BM25 混合检索，RRF 融合 + IDF 加权重排 |
-| **测试** | 82 项，含 27 条 SQL 注入攻击载荷 |
+| **测试** | 89 项，含 27 条 SQL 注入攻击载荷 |
 | **技术栈** | FastAPI · SQLAlchemy 2.0 · LangGraph · React 18 · TypeScript · Ant Design 5 |
 
 **这个项目最值得看的三处**（每一处都有对应的失败现场和实测数据）：
@@ -44,6 +44,8 @@
 | ![看板](docs/screenshots/01-dashboard.png) | ![对话](docs/screenshots/02-chat-rag.png) |
 | **知识库管理** | **数据接入** |
 | ![知识库](docs/screenshots/03-knowledge.png) | ![接入](docs/screenshots/04-ingest.png) |
+| **设置（运行时配置，免重启）** | |
+| ![设置](docs/screenshots/05-settings.png) | |
 
 > 截图由 `scripts/screenshot.mjs` 用 CDP 驱动本机 Edge 自动生成（零额外依赖，
 > 不装 Playwright）。改了 UI 后 `node scripts/screenshot.mjs` 一键重拍。
@@ -572,7 +574,7 @@ Refresh token 走 httpOnly Cookie 并采用**轮换式**签发 —— 用一次�
 ## 测试
 
 ```bash
-cd backend && pytest          # 82 项
+cd backend && pytest          # 89 项
 cd frontend && npx tsc --noEmit && npx vite build
 ```
 

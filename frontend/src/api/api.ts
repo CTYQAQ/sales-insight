@@ -291,3 +291,51 @@ export const alertApi = {
   events: (limit = 30) => http.get<AlertEventItem[]>('/alerts/events', { params: { limit } }),
   ack: (id: string) => http.post(`/alerts/events/${id}/ack`),
 }
+
+/* ---------------- 设置（仅管理员） ---------------- */
+export interface SettingsSnapshot {
+  llm: {
+    provider: string
+    deepseek: { api_key_set: boolean; api_key_masked: string; base_url: string; model: string }
+    ollama: { base_url: string; model: string }
+  }
+  rag: {
+    hybrid: boolean
+    embedding_backend: string
+    embedding_model: string
+    embedding_dim: number
+    embedding_base_url: string
+    embedding_api_key_set: boolean
+  }
+  notify: {
+    webhook_type: string
+    webhook_url_set: boolean
+    webhook_url_masked: string
+    webhook_keyword: string
+    smtp_host: string
+    smtp_port: number
+    smtp_user: string
+    smtp_password_set: boolean
+    email_to: string
+  }
+  system: {
+    app_name: string
+    app_env: string
+    database: string
+    milvus_mode: string
+    milvus_conn: string
+    embedding_model_dir: string
+    text2sql_enabled: boolean
+  }
+}
+
+export const settingsApi = {
+  get: () => http.get<SettingsSnapshot>('/settings'),
+  patch: (payload: Record<string, unknown>) =>
+    http.patch<{ changed: string[]; masked: Record<string, string>; needs_rebuild: boolean }>('/settings', payload),
+  testLlm: () =>
+    http.post<{ ok: boolean; provider: string; model: string; elapsed_ms: number; reply: string }>('/settings/test-llm'),
+  testNotify: (channel: 'webhook' | 'email') =>
+    http.post<{ ok: boolean }>('/settings/test-notify', { channel }),
+  demoReset: () => http.post<{ ok: boolean; rows_written: number }>('/settings/demo-reset'),
+}

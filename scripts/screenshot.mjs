@@ -235,6 +235,12 @@ const main = async () => {
   await sleep(2000)
   await shot('04-ingest')
 
+  console.log('设置…')
+  await goto('/settings')
+  await waitFor('.page-title')
+  await sleep(1500)
+  await shot('05-settings')
+
   ws.close()
   browser.kill()
 }

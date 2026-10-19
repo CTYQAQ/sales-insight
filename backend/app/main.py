@@ -75,12 +75,14 @@ def create_app() -> FastAPI:
     from app.modules.analytics.router import router as analytics_router
     from app.modules.auth.router import router as auth_router
     from app.modules.ingestion.router import router as ingestion_router
+    from app.modules.settings.router import router as settings_router
 
     app.include_router(auth_router)
     app.include_router(ingestion_router)
     app.include_router(analytics_router)
     app.include_router(ai_router)
     app.include_router(alerts_router)
+    app.include_router(settings_router)
 
     @app.get("/health", tags=["ops"])
     def health():

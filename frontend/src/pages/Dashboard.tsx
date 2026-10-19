@@ -4,8 +4,11 @@ import ReactECharts from 'echarts-for-react'
 import dayjs from 'dayjs'
 import { metricsApi, type BreakItem, type SummaryResp, type TrendItem } from '../api/api'
 import { errMsg } from '../api/client'
+import { PREFS_EVENT, readPrefDays, readPrefUnit } from './Settings'
 
+/** 金额单位偏好在「设置 → 看板偏好」里改：auto 按量级自动，wan 一律万元 */
 const fmtMoney = (v: number) =>
+  readPrefUnit() === 'wan' ? `¥${(v / 1_0000).toFixed(1)} 万` :
   v >= 1_0000_0000 ? `¥${(v / 1_0000_0000).toFixed(2)} 亿` :
   v >= 1_0000 ? `¥${(v / 1_0000).toFixed(1)} 万` : `¥${v.toFixed(0)}`
 
@@ -53,7 +56,8 @@ function KpiStrip({ summary }: { summary: SummaryResp | null }) {
 
 export default function Dashboard() {
   const { message } = AntApp.useApp()
-  const [days, setDays] = useState(30)
+  // 默认时间窗来自「设置 → 看板偏好」，用户在本页手动切换不受影响
+  const [days, setDays] = useState(readPrefDays)
   const [loading, setLoading] = useState(true)
   const [hasData, setHasData] = useState(true)
   const [summary, setSummary] = useState<SummaryResp | null>(null)
@@ -93,6 +97,14 @@ export default function Dashboard() {
   }, [days, dim, message])
 
   useEffect(() => { void load() }, [load])
+
+  // 设置页改了偏好就重新渲染（金额单位变了不用刷页面）
+  const [, forceRender] = useState(0)
+  useEffect(() => {
+    const onPrefs = () => forceRender((n) => n + 1)
+    window.addEventListener(PREFS_EVENT, onPrefs)
+    return () => window.removeEventListener(PREFS_EVENT, onPrefs)
+  }, [])
 
   useEffect(() => {
     if (!hasData || !range.min_date) return

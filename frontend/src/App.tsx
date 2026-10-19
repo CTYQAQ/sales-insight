@@ -2,7 +2,7 @@ import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-
 import { Layout, Menu, Spin, Tag, Typography } from 'antd'
 import {
   BellOutlined, BookOutlined, DashboardOutlined, DatabaseOutlined, FileTextOutlined,
-  MessageOutlined, TeamOutlined,
+  MessageOutlined, SettingOutlined, TeamOutlined,
 } from '@ant-design/icons'
 import { useAuth } from './store/AuthContext'
 import Login from './pages/Login'
@@ -13,6 +13,7 @@ import Alerts from './pages/Alerts'
 import Chat from './pages/Chat'
 import Knowledge from './pages/Knowledge'
 import Users from './pages/Users'
+import Settings from './pages/Settings'
 
 const { Sider, Content } = Layout
 
@@ -78,6 +79,17 @@ function Shell() {
             onClick={({ key }) => navigate(key)}
             style={{ flex: 1 }}
           />
+          {/* 工具类入口收到侧栏底部（设置只给管理员：接口里全是密钥与内网地址） */}
+          {user?.role === 'admin' && (
+            <div style={{ borderTop: '1px solid var(--rule)', paddingTop: 4 }}>
+              <Menu
+                mode="inline"
+                selectedKeys={[loc.pathname]}
+                items={[{ key: '/settings', icon: <SettingOutlined />, label: '设置' }]}
+                onClick={({ key }) => navigate(key)}
+              />
+            </div>
+          )}
           <div className="app-sider-foot">
             <span className="user-line">
               {user?.username}
@@ -101,6 +113,7 @@ function Shell() {
           <Route path="/chat" element={<Chat />} />
           <Route path="/knowledge" element={<Knowledge />} />
           <Route path="/users" element={user?.role === 'admin' ? <Users /> : <Navigate to="/" />} />
+          <Route path="/settings" element={user?.role === 'admin' ? <Settings /> : <Navigate to="/" />} />
         </Routes>
       </Content>
     </Layout>
