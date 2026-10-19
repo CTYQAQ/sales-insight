@@ -293,11 +293,19 @@ export const alertApi = {
 }
 
 /* ---------------- 设置（仅管理员） ---------------- */
+export interface LlmVendorConf {
+  label: string
+  needs_key: boolean
+  api_key_set: boolean
+  api_key_masked: string
+  base_url: string
+  model: string
+}
+
 export interface SettingsSnapshot {
   llm: {
     provider: string
-    deepseek: { api_key_set: boolean; api_key_masked: string; base_url: string; model: string }
-    ollama: { base_url: string; model: string }
+    providers: Record<string, LlmVendorConf>
   }
   rag: {
     hybrid: boolean

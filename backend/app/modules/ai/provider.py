@@ -152,7 +152,62 @@ class OllamaProvider(LLMProvider):
         return self._retry(_call)
 
 
+class OpenAICompatProvider(LLMProvider):
+    """OpenAI 兼容端点的通用实现。
+
+    OpenAI 官方、通义千问（DashScope 兼容模式）、智谱 GLM、Kimi 全都暴露
+    /v1/chat/completions 兼容接口，差别只在 base_url / api_key / model 三个值，
+    没必要每家各写一个类 —— 新厂商加进下面的 COMPAT_PROVIDERS 注册表即可。
+    """
+
+    def __init__(self, name: str, label: str) -> None:
+        prefix = name.upper()
+        api_key = getattr(settings, f"{prefix}_API_KEY", "")
+        if not api_key:
+            raise DependencyError(f"未配置 {prefix}_API_KEY：在「设置 → AI 模型」里填写，或改 .env")
+        self.name = name
+        self._label = label
+        self._client = OpenAI(
+            api_key=api_key,
+            base_url=getattr(settings, f"{prefix}_BASE_URL"),
+            timeout=settings.LLM_TIMEOUT_SEC,
+        )
+        self._model = getattr(settings, f"{prefix}_MODEL")
+
+    def auth_hint(self) -> str:
+        return f"请核对 {self._label} 的 API Key 是否与接口地址匹配、余额是否耗尽（设置页可在线改）"
+
+    def complete(self, system: str, user: str, *, max_tokens: int = 2000, temperature: float = 0.3) -> str:
+        def _call():
+            resp = self._client.chat.completions.create(
+                model=self._model,
+                messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+                max_tokens=max_tokens,
+                temperature=temperature,
+            )
+            content = resp.choices[0].message.content
+            if not content or not content.strip():
+                raise DependencyError(f"{self._label} 返回空内容")
+            return content.strip()
+
+        return self._retry(_call)
+
+
+# name -> 展示名。配置键统一为 {NAME}_API_KEY / {NAME}_BASE_URL / {NAME}_MODEL
+COMPAT_PROVIDERS: dict[str, str] = {
+    "openai": "OpenAI",
+    "qwen": "通义千问",
+    "zhipu": "智谱 GLM",
+    "moonshot": "Kimi",
+}
+
+
 def get_llm_provider() -> LLMProvider:
     if settings.LLM_PROVIDER == "ollama":
         return OllamaProvider()
-    return DeepSeekProvider()
+    if settings.LLM_PROVIDER == "deepseek":
+        return DeepSeekProvider()
+    label = COMPAT_PROVIDERS.get(settings.LLM_PROVIDER)
+    if label:
+        return OpenAICompatProvider(settings.LLM_PROVIDER, label)
+    raise DependencyError(f"未知的 LLM_PROVIDER：{settings.LLM_PROVIDER}")

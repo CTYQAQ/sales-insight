@@ -33,6 +33,18 @@ class SettingsPatch(BaseModel):
     DEEPSEEK_MODEL: str | None = None
     OLLAMA_BASE_URL: str | None = None
     OLLAMA_MODEL: str | None = None
+    OPENAI_API_KEY: str | None = None
+    OPENAI_BASE_URL: str | None = None
+    OPENAI_MODEL: str | None = None
+    QWEN_API_KEY: str | None = None
+    QWEN_BASE_URL: str | None = None
+    QWEN_MODEL: str | None = None
+    ZHIPU_API_KEY: str | None = None
+    ZHIPU_BASE_URL: str | None = None
+    ZHIPU_MODEL: str | None = None
+    MOONSHOT_API_KEY: str | None = None
+    MOONSHOT_BASE_URL: str | None = None
+    MOONSHOT_MODEL: str | None = None
     # RAG / Embedding
     RAG_HYBRID: bool | None = None
     EMBEDDING_BACKEND: str | None = None
@@ -52,7 +64,7 @@ class SettingsPatch(BaseModel):
 
 
 _ENUMS = {
-    "LLM_PROVIDER": {"deepseek", "ollama"},
+    "LLM_PROVIDER": {"deepseek", "ollama", "openai", "qwen", "zhipu", "moonshot"},
     "EMBEDDING_BACKEND": {"local", "bge", "api"},
     "WEBHOOK_TYPE": {"dingtalk", "wecom", "feishu", "none"},
 }
@@ -60,7 +72,20 @@ _ENUMS = {
 # 改了必须重建索引的键 —— 集合名带模型指纹，混用新旧向量会得到噪声
 _REBUILD_KEYS = {"EMBEDDING_BACKEND", "EMBEDDING_MODEL", "EMBEDDING_DIM"}
 
-_SECRET_KEYS = {"DEEPSEEK_API_KEY", "EMBEDDING_API_KEY", "SMTP_PASSWORD", "WEBHOOK_URL"}
+_SECRET_KEYS = {
+    "DEEPSEEK_API_KEY", "OPENAI_API_KEY", "QWEN_API_KEY", "ZHIPU_API_KEY", "MOONSHOT_API_KEY",
+    "EMBEDDING_API_KEY", "SMTP_PASSWORD", "WEBHOOK_URL",
+}
+
+# 设置页「对话模型」下拉的展示顺序与中文名，前后端共用这一份事实
+_LLM_VENDORS = [
+    ("deepseek", "DeepSeek", True),
+    ("qwen", "通义千问", True),
+    ("zhipu", "智谱 GLM", True),
+    ("moonshot", "Kimi", True),
+    ("openai", "OpenAI", True),
+    ("ollama", "Ollama（本地）", False),  # 本地服务，不需要 Key
+]
 
 
 def _mask(value: str) -> str:
@@ -74,17 +99,20 @@ def _mask(value: str) -> str:
 def snapshot() -> dict[str, Any]:
     """当前生效配置的全量快照（密钥脱敏）。前端设置页一次性拿这个渲染。"""
     s = settings
+    providers: dict[str, Any] = {}
+    for name, label, needs_key in _LLM_VENDORS:
+        prefix = name.upper()
+        key = getattr(s, f"{prefix}_API_KEY", "")
+        providers[name] = {
+            "label": label,
+            "needs_key": needs_key,
+            "api_key_set": bool(key),
+            "api_key_masked": _mask(key),
+            "base_url": getattr(s, f"{prefix}_BASE_URL", ""),
+            "model": getattr(s, f"{prefix}_MODEL", ""),
+        }
     return {
-        "llm": {
-            "provider": s.LLM_PROVIDER,
-            "deepseek": {
-                "api_key_set": bool(s.DEEPSEEK_API_KEY),
-                "api_key_masked": _mask(s.DEEPSEEK_API_KEY),
-                "base_url": s.DEEPSEEK_BASE_URL,
-                "model": s.DEEPSEEK_MODEL,
-            },
-            "ollama": {"base_url": s.OLLAMA_BASE_URL, "model": s.OLLAMA_MODEL},
-        },
+        "llm": {"provider": s.LLM_PROVIDER, "providers": providers},
         "rag": {
             "hybrid": s.RAG_HYBRID,
             "embedding_backend": s.EMBEDDING_BACKEND,
@@ -182,7 +210,7 @@ def test_llm() -> dict[str, Any]:
     return {
         "ok": True,
         "provider": provider.name,
-        "model": settings.DEEPSEEK_MODEL if provider.name == "deepseek" else settings.OLLAMA_MODEL,
+        "model": getattr(settings, f"{provider.name.upper()}_MODEL", ""),
         "elapsed_ms": elapsed_ms,
         "reply": reply[:50],
     }

@@ -6,7 +6,7 @@
 [![CI](https://github.com/CTYQAQ/sales-insight/actions/workflows/ci.yml/badge.svg)](https://github.com/CTYQAQ/sales-insight/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.12+-blue)
 ![React](https://img.shields.io/badge/React-18-61dafb)
-![Tests](https://img.shields.io/badge/tests-89%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-94%20passed-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ![对话助手：意图路由 + RAG 引用](docs/screenshots/02-chat-rag.png)
@@ -23,7 +23,7 @@
 | **规模** | 40 个 API 端点 · 50 个后端模块 · 6 个前端页面 |
 | **Agent** | 3 套：会自我纠错的数据 Agent、意图路由对话 Agent、报告生成 |
 | **RAG** | Milvus + BGE(512d) + BM25 混合检索，RRF 融合 + IDF 加权重排 |
-| **测试** | 89 项，含 27 条 SQL 注入攻击载荷 |
+| **测试** | 94 项，含 27 条 SQL 注入攻击载荷 |
 | **技术栈** | FastAPI · SQLAlchemy 2.0 · LangGraph · React 18 · TypeScript · Ant Design 5 |
 
 **这个项目最值得看的三处**（每一处都有对应的失败现场和实测数据）：
@@ -574,7 +574,7 @@ Refresh token 走 httpOnly Cookie 并采用**轮换式**签发 —— 用一次�
 ## 测试
 
 ```bash
-cd backend && pytest          # 89 项
+cd backend && pytest          # 94 项
 cd frontend && npx tsc --noEmit && npx vite build
 ```
 

@@ -76,13 +76,9 @@ export default function Settings() {
   const [testState, setTestState] = useState<{ testing: boolean; result?: string; ok?: boolean }>({ testing: false })
   const [notifyTest, setNotifyTest] = useState<string>('')
 
-  // AI 模型表单
+  // AI 模型表单：每家厂商一份 {key, base, model}，key 留空 = 不改动现有密钥
   const [provider, setProvider] = useState('deepseek')
-  const [apiKey, setApiKey] = useState('')
-  const [dsBase, setDsBase] = useState('')
-  const [dsModel, setDsModel] = useState('')
-  const [olBase, setOlBase] = useState('')
-  const [olModel, setOlModel] = useState('')
+  const [confs, setConfs] = useState<Record<string, { key: string; base: string; model: string }>>({})
   // 检索与 Embedding
   const [hybrid, setHybrid] = useState(true)
   const [embBackend, setEmbBackend] = useState('local')
@@ -109,8 +105,9 @@ export default function Settings() {
       const s = await settingsApi.get()
       setSnap(s)
       setProvider(s.llm.provider)
-      setDsBase(s.llm.deepseek.base_url); setDsModel(s.llm.deepseek.model)
-      setOlBase(s.llm.ollama.base_url); setOlModel(s.llm.ollama.model)
+      setConfs(Object.fromEntries(
+        Object.entries(s.llm.providers).map(([name, c]) => [name, { key: '', base: c.base_url, model: c.model }]),
+      ))
       setHybrid(s.rag.hybrid)
       setEmbBackend(s.rag.embedding_backend); setEmbModel(s.rag.embedding_model)
       setEmbDim(s.rag.embedding_dim); setEmbBase(s.rag.embedding_base_url)
@@ -133,7 +130,8 @@ export default function Settings() {
       } else {
         message.success(okText)
       }
-      setApiKey(''); setEmbKey(''); setSmtpPass('')
+      setConfs((prev) => Object.fromEntries(Object.entries(prev).map(([k, v]) => [k, { ...v, key: '' }])))
+      setEmbKey(''); setSmtpPass('')
       await load()
     } catch (e) {
       message.error(errMsg(e))
@@ -142,15 +140,17 @@ export default function Settings() {
     }
   }
 
-  const saveLlm = () => patch('llm', {
-    LLM_PROVIDER: provider,
-    DEEPSEEK_BASE_URL: dsBase,
-    DEEPSEEK_MODEL: dsModel,
-    OLLAMA_BASE_URL: olBase,
-    OLLAMA_MODEL: olModel,
-    // 密钥留空 = 不动；填了才覆盖。后端对 None 与 "" 区分处理
-    ...(apiKey ? { DEEPSEEK_API_KEY: apiKey } : {}),
-  }, '模型配置已保存，立即生效')
+  const saveLlm = () => {
+    const prefix = provider.toUpperCase()
+    const conf = confs[provider]
+    return patch('llm', {
+      LLM_PROVIDER: provider,
+      [`${prefix}_BASE_URL`]: conf?.base ?? '',
+      [`${prefix}_MODEL`]: conf?.model ?? '',
+      // 密钥留空 = 不动；填了才覆盖。后端对 None 与 "" 区分处理
+      ...(conf?.key ? { [`${prefix}_API_KEY`]: conf.key } : {}),
+    }, '模型配置已保存，立即生效')
+  }
 
   const saveRag = () => patch('rag', {
     RAG_HYBRID: hybrid,
@@ -210,42 +210,43 @@ export default function Settings() {
       {/* ---------------- AI 模型 ---------------- */}
       <Section first title="AI 模型" desc="对话、问数、报告共用的一组模型。改完立刻生效，不用重启。">
         <Field label="对话模型">
-          <Segmented
+          <Select
             value={provider}
-            onChange={(v) => setProvider(String(v))}
-            options={[
-              { label: 'DeepSeek（API）', value: 'deepseek' },
-              { label: 'Ollama（本地）', value: 'ollama' },
-            ]}
+            onChange={setProvider}
+            style={{ width: 240 }}
+            options={Object.entries(snap?.llm.providers ?? {}).map(([name, c]) => ({
+              value: name,
+              label: `${c.label}${c.api_key_set ? '' : c.needs_key ? '（未配置 Key）' : ''}`,
+            }))}
           />
         </Field>
-        {provider === 'deepseek' ? (
-          <>
-            <Field label="API Key">
-              <Input.Password
-                style={{ maxWidth: 320 }}
-                placeholder={snap?.llm.deepseek.api_key_set ? `当前：${snap.llm.deepseek.api_key_masked}（留空保持不变）` : '未配置'}
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-              />
-            </Field>
-            <Field label="接口地址">
-              <Input style={{ maxWidth: 320 }} value={dsBase} onChange={(e) => setDsBase(e.target.value)} />
-            </Field>
-            <Field label="模型">
-              <Input style={{ maxWidth: 320 }} value={dsModel} onChange={(e) => setDsModel(e.target.value)} />
-            </Field>
-          </>
-        ) : (
-          <>
-            <Field label="服务地址">
-              <Input style={{ maxWidth: 320 }} value={olBase} onChange={(e) => setOlBase(e.target.value)} />
-            </Field>
-            <Field label="模型">
-              <Input style={{ maxWidth: 320 }} value={olModel} onChange={(e) => setOlModel(e.target.value)} />
-            </Field>
-          </>
-        )}
+        {(() => {
+          const vendor = snap?.llm.providers[provider]
+          const conf = confs[provider]
+          if (!vendor || !conf) return null
+          const setConf = (k: 'key' | 'base' | 'model', v: string) =>
+            setConfs((prev) => ({ ...prev, [provider]: { ...prev[provider], [k]: v } }))
+          return (
+            <>
+              {vendor.needs_key && (
+                <Field label="API Key">
+                  <Input.Password
+                    style={{ maxWidth: 320 }}
+                    placeholder={vendor.api_key_set ? `当前：${vendor.api_key_masked}（留空保持不变）` : `未配置 ${provider.toUpperCase()}_API_KEY`}
+                    value={conf.key}
+                    onChange={(e) => setConf('key', e.target.value)}
+                  />
+                </Field>
+              )}
+              <Field label="接口地址">
+                <Input style={{ maxWidth: 380 }} value={conf.base} onChange={(e) => setConf('base', e.target.value)} />
+              </Field>
+              <Field label="模型">
+                <Input style={{ maxWidth: 320 }} value={conf.model} onChange={(e) => setConf('model', e.target.value)} />
+              </Field>
+            </>
+          )
+        })()}
         {testState.result && (
           <Typography.Text
             style={{ fontSize: 12, display: 'block', marginBottom: 8, color: testState.ok ? 'var(--down)' : 'var(--up)' }}

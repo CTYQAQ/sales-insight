@@ -140,3 +140,36 @@ def test_unknown_api_status_error_still_fails_fast(provider: DummyProvider) -> N
         provider._retry(weird)
 
     assert len(calls) == 1
+
+
+def test_compat_provider_factory_reads_registry(monkeypatch) -> None:
+    """切到通义千问时，工厂要拿 QWEN_* 三件套构造，而不是 DeepSeek 的。"""
+    from app.core.config import settings
+    from app.modules.ai.provider import OpenAICompatProvider, get_llm_provider
+
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "qwen")
+    monkeypatch.setattr(settings, "QWEN_API_KEY", "sk-qwen-test-key")
+    p = get_llm_provider()
+    assert isinstance(p, OpenAICompatProvider)
+    assert p.name == "qwen"
+    assert p._model == settings.QWEN_MODEL
+
+
+def test_compat_provider_missing_key_names_the_env_var(monkeypatch) -> None:
+    """没配 Key 时要点名缺的是哪个变量，不能是一句泛泛的'未配置'。"""
+    from app.core.config import settings
+    from app.modules.ai.provider import get_llm_provider
+
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "moonshot")
+    monkeypatch.setattr(settings, "MOONSHOT_API_KEY", "")
+    with pytest.raises(DependencyError, match="MOONSHOT_API_KEY"):
+        get_llm_provider()
+
+
+def test_unknown_provider_rejected(monkeypatch) -> None:
+    from app.core.config import settings
+    from app.modules.ai.provider import get_llm_provider
+
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "some-random-llm")
+    with pytest.raises(DependencyError, match="未知"):
+        get_llm_provider()

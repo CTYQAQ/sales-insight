@@ -36,13 +36,28 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_TTL_MIN: int = 30
     REFRESH_TOKEN_TTL_DAYS: int = 7
 
-    # ---- AI (DeepSeek / OpenAI-compatible) ----
-    LLM_PROVIDER: Literal["deepseek", "ollama"] = "deepseek"
+    # ---- AI (DeepSeek / Ollama / OpenAI 兼容厂商) ----
+    # deepseek 与 ollama 有专用配置；openai/qwen/zhipu/moonshot 走通用的
+    # OpenAI 兼容端点（这些厂商官方都提供 /v1/chat/completions 兼容模式），
+    # 每家三个键：API_KEY / BASE_URL / MODEL。
+    LLM_PROVIDER: Literal["deepseek", "ollama", "openai", "qwen", "zhipu", "moonshot"] = "deepseek"
     DEEPSEEK_API_KEY: str = ""
     DEEPSEEK_BASE_URL: str = "https://api.deepseek.com/v1"
     DEEPSEEK_MODEL: str = "deepseek-chat"
     OLLAMA_BASE_URL: str = "http://127.0.0.1:11434/v1"
     OLLAMA_MODEL: str = "deepseek-r1:7b"
+    OPENAI_API_KEY: str = ""
+    OPENAI_BASE_URL: str = "https://api.openai.com/v1"
+    OPENAI_MODEL: str = "gpt-4o-mini"
+    QWEN_API_KEY: str = ""
+    QWEN_BASE_URL: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    QWEN_MODEL: str = "qwen-plus"
+    ZHIPU_API_KEY: str = ""
+    ZHIPU_BASE_URL: str = "https://open.bigmodel.cn/api/paas/v4"
+    ZHIPU_MODEL: str = "glm-4-flash"
+    MOONSHOT_API_KEY: str = ""
+    MOONSHOT_BASE_URL: str = "https://api.moonshot.cn/v1"
+    MOONSHOT_MODEL: str = "moonshot-v1-8k"
     LLM_TIMEOUT_SEC: int = 120
     LLM_MAX_RETRIES: int = 2
 
@@ -116,10 +131,12 @@ class Settings(BaseSettings):
 
     def validate_startup(self) -> None:
         """启动时集中校验，缺关键配置直接抛错，避免带着坏配置跑起来。"""
-        if self.LLM_PROVIDER == "deepseek" and not self.DEEPSEEK_API_KEY:
-            raise RuntimeError(
-                "DEEPSEEK_API_KEY 未配置：请在 backend/.env 中填写，或把 LLM_PROVIDER 改成 ollama"
-            )
+        if self.LLM_PROVIDER != "ollama":
+            key_name = f"{self.LLM_PROVIDER.upper()}_API_KEY"
+            if not getattr(self, key_name, ""):
+                raise RuntimeError(
+                    f"{key_name} 未配置：请在 backend/.env 中填写，或把 LLM_PROVIDER 改成 ollama"
+                )
         if self.EMBEDDING_BACKEND == "api" and not self.EMBEDDING_API_KEY:
             raise RuntimeError(
                 "EMBEDDING_BACKEND=api 但 EMBEDDING_API_KEY 为空：请填写 Key，"

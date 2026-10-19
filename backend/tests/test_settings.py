@@ -65,6 +65,22 @@ def test_persist_env_replaces_in_place_and_keeps_comments(tmp_path, monkeypatch)
 
 def test_snapshot_masks_secrets():
     snap = service.snapshot()
-    assert snap["llm"]["deepseek"]["api_key_set"] is True
-    assert "…" in snap["llm"]["deepseek"]["api_key_masked"]
+    deepseek = snap["llm"]["providers"]["deepseek"]
+    assert deepseek["api_key_set"] is True
+    assert "…" in deepseek["api_key_masked"]
     assert snap["system"]["milvus_mode"] in ("lite", "standalone")
+
+
+def test_snapshot_lists_all_llm_vendors():
+    snap = service.snapshot()
+    providers = snap["llm"]["providers"]
+    assert set(providers) == {"deepseek", "ollama", "openai", "qwen", "zhipu", "moonshot"}
+    assert providers["ollama"]["needs_key"] is False
+    assert providers["qwen"]["needs_key"] is True
+
+
+def test_patch_new_vendor_key_masked(restore_settings, monkeypatch, tmp_path):
+    monkeypatch.setattr(service, "_env_path", lambda: tmp_path / ".env")
+    r = service.apply_patch(SettingsPatch(QWEN_API_KEY="sk-dashscope-123456"))
+    assert r["masked"]["QWEN_API_KEY"] == "sk-…3456"
+    assert settings.QWEN_API_KEY == "sk-dashscope-123456"

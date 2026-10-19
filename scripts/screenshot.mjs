@@ -237,7 +237,10 @@ const main = async () => {
 
   console.log('设置…')
   await goto('/settings')
-  await waitFor('.page-title')
+  // 每次 goto 都是整页加载，会话要从 refresh cookie 恢复，期间页面是全局 Spin。
+  // .page-title 在上一页还残留在 DOM 里，不可靠；等设置页特有的控件出现。
+  const settingsOk = await waitFor('.app-sider .ant-select-selector, .app-sider + * .ant-select', 20_000)
+  console.log('设置页渲染:', settingsOk)
   await sleep(1500)
   await shot('05-settings')
 
