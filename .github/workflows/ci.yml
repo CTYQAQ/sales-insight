@@ -11,6 +11,11 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# 新仓库的 GITHUB_TOKEN 默认只读，推诊断分支需要显式给写权限。
+# 诊断步骤删掉后这一行也可以删。
+permissions:
+  contents: write
+
 jobs:
   backend:
     name: 后端 · pytest (82 项)
