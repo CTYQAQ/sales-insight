@@ -79,27 +79,27 @@ curl -X POST http://127.0.0.1:8000/api/knowledge/seed -H "Authorization: Bearer 
 
 ```mermaid
 flowchart TD
-    U[业务同事] -->|中文提问| FE[React 18 + AntD]
-    FE -->|POST /api/chat/dialog| ROUTE{意图路由}
+    U["业务同事"] -->|"中文提问"| FE["React 18 + AntD"]
+    FE -->|"POST /api/chat/dialog"| ROUTE{"意图路由"}
 
-    ROUTE -->|规则优先<br/>判不准才问模型| I1[knowledge]
-    ROUTE --> I2[data]
-    ROUTE --> I3[chat]
+    ROUTE -->|knowledge| I1["知识类"]
+    ROUTE -->|data| I2["数字类"]
+    ROUTE -->|chat| I3["闲聊"]
 
-    I1 --> RET[混合检索]
-    RET --> V[(Milvus<br/>BGE 512d)]
-    RET --> B[(BM25<br/>jieba 分词)]
-    V --> RRF[RRF 融合<br/>+ IDF 加权重排]
+    I1 --> RET["混合检索"]
+    RET --> V[("Milvus · BGE 512d")]
+    RET --> B[("BM25 · jieba 分词")]
+    V --> RRF["RRF 融合 + IDF 加权重排"]
     B --> RRF
-    RRF --> ANS1[依据片段作答<br/>标注 1 2 3 引用]
+    RRF --> ANS1["依据片段作答，标注引用"]
 
-    I2 --> AGENT[数据 Agent<br/>LangGraph 状态图]
-    AGENT --> GS[生成 SQL] --> GUARD{安全围栏<br/>白名单·AST·权限注入}
-    GUARD --> EXE[执行]
-    EXE -->|空结果/报错| REF[reflect 反思] --> GS
-    EXE -->|有结果| ANS2[只依据结果写结论]
+    I2 --> AGENT["数据 Agent · LangGraph"]
+    AGENT --> GS["生成 SQL"] --> GUARD{"安全围栏：白名单 / AST / 权限注入"}
+    GUARD --> EXE["执行"]
+    EXE -->|"空结果或报错"| REF["reflect 反思"] --> GS
+    EXE -->|"有结果"| ANS2["只依据结果写结论"]
 
-    I3 --> ANS3[一般对话]
+    I3 --> ANS3["一般对话"]
 
     ANS1 --> FE
     ANS2 --> FE
@@ -110,14 +110,14 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    subgraph 确定性["analytics：只算数"]
-        A1[pandas 聚合] --> A2[环比/同比/异动榜]
+    subgraph DET["analytics：只算数"]
+        A1["pandas 聚合"] --> A2["环比 / 同比 / 异动榜"]
     end
-    subgraph 生成["ai：只解读"]
-        B1[Prompt] --> B2[LLM 输出]
+    subgraph GEN["ai：只解读"]
+        B1["组装 Prompt"] --> B2["LLM 输出"]
     end
-    A2 -->|算准的数字| B1
-    A2 -.->|单元测试直接断言| T[不依赖 LLM]
+    A2 -->|"算准的数字"| B1
+    A2 -.->|"单元测试直接断言"| T["不依赖 LLM"]
 ```
 
 **分层原则**：`analytics` 只算数、`ai` 只解读，两者不混写。
@@ -136,14 +136,14 @@ JOIN 落空返回 `NULL`，模型便对着 NULL 编出一句"该期间无销售�
 
 ```mermaid
 flowchart TD
-    S([START]) --> RW[rewrite<br/>口语→规整问句<br/>对齐真实维度取值]
-    RW --> GEN[generate_sql<br/>带上上一轮错误信息]
-    GEN --> GD[guard<br/>白名单 + AST + 权限注入 + LIMIT]
-    GD --> EX[execute]
-    EX -->|结果有效| ANS[answer<br/>只依据结果写结论]
-    EX -->|空结果 / 全 NULL / 报错| RF[reflect<br/>诊断原因 + 修正建议]
-    RF -->|未达重试上限 3 次| GEN
-    RF -->|重试封顶| ANS
+    S([START]) --> RW["rewrite · 口语转规整问句，对齐真实维度取值"]
+    RW --> GEN["generate_sql · 带上上一轮的错误信息"]
+    GEN --> GD["guard · 白名单 / AST / 权限注入 / LIMIT 兜底"]
+    GD --> EX["execute"]
+    EX -->|"结果有效"| ANS["answer · 只依据结果写结论"]
+    EX -->|"空结果 / 全 NULL / 报错"| RF["reflect · 诊断原因 + 修正建议"]
+    RF -->|"未达重试上限 3 次"| GEN
+    RF -->|"重试封顶"| ANS
     ANS --> E([END])
 
     style GD fill:#fff4e6,stroke:#fa8c16
@@ -192,22 +192,24 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    S([START]) --> UN[understand<br/>指代消解]
-    UN --> RT{route<br/>规则优先}
+    S([START]) --> UN["understand · 指代消解"]
+    UN --> RT{"route · 规则优先"}
 
-    RT -->|knowledge| RE[retrieve<br/>BM25 + 向量]
-    RE --> KB[answer_kb<br/>严格依据片段<br/>标注引用]
-    RT -->|data| DA[answer_data<br/>复用数据 Agent<br/>含自纠错]
-    RT -->|chat| CH[answer_chat]
+    RT -->|knowledge| RE["retrieve · BM25 + 向量"]
+    RE --> KB["answer_kb · 严格依据片段、标注引用"]
+    RT -->|data| DA["answer_data · 复用数据 Agent（含自纠错）"]
+    RT -->|chat| CH["answer_chat"]
 
     KB --> E([END])
     DA --> E
     CH --> E
 
-    UN -.->|"那华南呢"<br/>→ "华南区2026年9月营收多少？"| UN2[继承上一轮的时间与指标]
-
     style RT fill:#e6f4ff,stroke:#1677ff
 ```
+
+`understand` 这一层专门解决**指代消解**：用户极少把话说全。
+实测 `「那华南呢」→「华南区2026年9月营收多少？」`，自动继承了上一轮的"上个月"和"营收"。
+问句本身已经完整时它会跳过，省一次 300–800ms 的模型调用。
 
 | 节点 | 职责 | 是否用 LLM |
 |---|---|---|
