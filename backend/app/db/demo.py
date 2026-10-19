@@ -138,7 +138,11 @@ def ensure_demo_data(*, force: bool = False) -> int:
             cust_code = rnd.choice(CUSTOMERS)[0]
             sku = rnd.choice(PRODUCTS)[0]
 
-            qty = float(rnd.choice([1, 1, 2, 3, 5, 8, 12, 20, 35]))
+            # 按"订单预算"反推数量：贵的设备买 1~3 台，便宜的耗材买几十上百个。
+            # 若直接给 1~35 的随机数量，会出现"一次买 35 台监护仪＝168 万"这种
+            # 明显不真实的单据，看板上的客单价也就失真了。
+            budget = rnd.uniform(3000, 55000)
+            qty = max(1, min(int(budget / base_price[sku]), 200))
             # 单价围绕基准价上下浮动，偶尔有折扣
             price = base_price[sku] * rnd.uniform(0.88, 1.06)
             revenue = round(qty * price, 2)
