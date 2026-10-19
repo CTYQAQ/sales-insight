@@ -11,11 +11,6 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-# 新仓库的 GITHUB_TOKEN 默认只读，推诊断分支需要显式给写权限。
-# 诊断步骤删掉后这一行也可以删。
-permissions:
-  contents: write
-
 jobs:
   backend:
     name: 后端 · pytest (82 项)
@@ -61,21 +56,7 @@ jobs:
           # 关掉颜色，日志在 Actions 里更好读
           PYTHONUNBUFFERED: "1"
           NO_COLOR: "1"
-        run: |
-          set -o pipefail
-          pytest -q --junitxml=report.xml 2>&1 | tee pytest-output.txt
-
-      # 临时诊断：失败时把测试输出推回 ci-debug 分支，便于直接读日志
-      - name: 失败时回传日志
-        if: failure()
-        working-directory: backend
-        run: |
-          git config user.name "ci-bot"
-          git config user.email "ci-bot@local"
-          git checkout -B ci-debug
-          git add -f pytest-output.txt
-          git commit -m "ci: 失败日志（自动，勿合并）" || true
-          git push -f origin ci-debug
+        run: pytest -q --junitxml=report.xml
 
       - name: 上传测试报告
         if: always()

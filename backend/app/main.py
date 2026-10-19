@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from app.core.config import settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import bind_request_id, get_logger, setup_logging
+from app.db.demo import ensure_demo_data
 from app.db.seed import ensure_bootstrap
 from app.db.session import init_db
 
@@ -22,6 +23,8 @@ async def lifespan(app: FastAPI):
     settings.validate_startup()
     init_db()
     ensure_bootstrap()
+    # 演示数据：表里已有数据就跳过，所以重启不会翻倍，生产关掉即可
+    ensure_demo_data()
     log.info("%s started env=%s host=%s port=%s", settings.APP_NAME, settings.APP_ENV, settings.APP_HOST, settings.APP_PORT)
     yield
     from app.db.session import engine
