@@ -1,0 +1,9 @@
+# 开发/CI 专用依赖。生产镜像不需要这些。
+#
+# 为什么不直接塞进 requirements.txt：
+# 生产镜像里装 pytest 等于白白增加攻击面和镜像体积，而且测试工具版本升级
+# 不该影响线上行为。CI 里两条都装：pip install -r requirements.txt -r requirements-dev.txt
+
+-r requirements.txt
+
+pytest>=8.0.0
