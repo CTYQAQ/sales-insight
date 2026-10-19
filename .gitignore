@@ -1,0 +1,59 @@
+# ---- 密钥与环境变量（绝对不能提交）----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+
+# ---- 数据库：含真实业务数据 + 会话令牌 ----
+*.db
+*.sqlite
+*.sqlite3
+
+# ---- Milvus lite：以目录形式落盘（collections/ databases/ LOCK）----
+milvus*.db/
+milvus.db/
+# 测试用临时库
+backend/milvus_probe.db/
+backend/milvus_test.db/
+
+# ---- 模型权重：动辄几百 MB，clone 后自己下 ----
+models/
+backend/models/
+
+# ---- 上传目录 ----
+uploads/
+!uploads/.gitkeep
+
+# ---- 知识库素材目录 ----
+# 只保留占位文件。真实语料（含第三方课程笔记/公司文档）不入库：
+# 一是体积，二是版权与保密。clone 后用 /api/knowledge/seed 灌内置示例文档，
+# 或把自己的文档丢进这个目录再 /api/knowledge/rebuild。
+backend/app/kb_docs/*
+!backend/app/kb_docs/.gitkeep
+!backend/app/kb_docs/_readme.md
+
+# ---- Node ----
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.local
+
+# ---- IDE / 系统 ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

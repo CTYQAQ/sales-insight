@@ -1,0 +1,32 @@
+services:
+  backend:
+    build: ./backend
+    container_name: sales-insight-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      # Docker 内 SQLite 要落到挂载卷，否则容器删了数据就没了
+      DATABASE_URL: sqlite:////app/data/sales_insight.db
+      UPLOAD_DIR: /app/data/uploads
+      APP_HOST: 0.0.0.0
+    volumes:
+      - backend-data:/app/data
+    networks: [app-net]
+
+  frontend:
+    build: ./frontend
+    container_name: sales-insight-frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80" # 浏览器访问 http://localhost:8080
+    depends_on:
+      - backend
+    networks: [app-net]
+
+volumes:
+  backend-data:
+
+networks:
+  app-net:
+    driver: bridge

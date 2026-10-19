@@ -1,0 +1,54 @@
+# ---- Web ----
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9
+
+# ---- Data / ORM ----
+SQLAlchemy>=2.0.30
+alembic>=1.13.0
+pandas>=2.2.0
+openpyxl>=3.1.0
+
+# ---- Validation / Settings ----
+pydantic>=2.7.0
+pydantic-settings>=2.3.0
+
+# ---- Security ----
+PyJWT>=2.8.0
+bcrypt>=4.0.1
+
+# ---- AI ----
+openai>=1.35.0
+# Agent 状态图编排（问数 Agent：改写→生成→校验→执行→反思→解读）
+langgraph>=0.2.0
+
+# ---- RAG / 向量检索 ----
+# pymilvus 自带 MilvusClient，lite 模式（本地文件）由 milvus-lite 提供，免 Docker
+pymilvus>=2.4.0
+milvus-lite>=2.4.0
+# BM25 稀疏召回：混合检索的另一半
+rank-bm25>=0.2.2
+# 中文分词：BM25 必须有它，否则中文会被当成一整串
+jieba>=0.42.1
+
+# ---- Optional: 本地 BGE 语义向量（EMBEDDING_BACKEND=bge 时才需要）----
+# 不装也能跑：默认的 local 哈希后端零依赖，链路和单测都能通。
+# 但 local 没有语义能力，生产必须换 BGE 或 api。装上后约 +2GB（torch 占大头）。
+# 模型下载见 README「Embedding 的选型说明」，国内建议走 ModelScope。
+# sentence-transformers>=3.0.0
+# torch>=2.0.0
+
+# ---- SQL safety (Text2SQL read-only guard) ----
+sqlglot>=23.0.0
+
+# ---- Scheduler / HTTP ----
+APScheduler>=3.10.4
+httpx>=0.27.0
+
+# ---- Utils ----
+python-dotenv>=1.0.0
+
+# ---- Optional drivers: install when connecting external DB ----
+# MySQL:      pymysql>=1.1.0  (or mysqlclient)
+# PostgreSQL: psycopg[binary]>=3.1.0
+# SQL Server: pyodbc>=5.1.0
