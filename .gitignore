@@ -21,6 +21,9 @@ build/
 *.db
 *.sqlite
 *.sqlite3
+# SQLite WAL 模式会额外生成 -shm / -wal，两个都不能提交
+*.db-shm
+*.db-wal
 
 # ---- Milvus lite：以目录形式落盘（collections/ databases/ LOCK）----
 milvus*.db/
@@ -50,6 +53,11 @@ node_modules/
 frontend/dist/
 frontend/.vite/
 *.local
+# tsc 增量编译缓存
+*.tsbuildinfo
+
+# ---- 脚本产物 ----
+*_out.txt
 
 # ---- IDE / 系统 ----
 .vscode/
