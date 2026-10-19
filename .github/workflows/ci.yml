@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# 同一分支的新 push 取消旧运行，省 runner 时间
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: 后端 · pytest (82 项)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: 安装依赖
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # 用假 Key：测试里 LLM 全部被 mock，不会真的发请求。
+      # 但 settings.validate_startup() 会检查 Key 是否存在，缺了直接启动失败。
+      - name: 生成 CI 配置
+        working-directory: backend
+        run: |
+          cat > .env <<'EOF'
+          LLM_PROVIDER=deepseek
+          DEEPSEEK_API_KEY=ci-dummy-not-a-real-key
+          JWT_SECRET=ci-only-secret-at-least-32-chars-long
+          DATABASE_URL=sqlite:///./sales_insight.db
+          EMBEDDING_BACKEND=local
+          MILVUS_CONN=./milvus.db
+          RAG_HYBRID=true
+          EOF
+
+      - name: 跑测试
+        working-directory: backend
+        env:
+          # 关掉颜色，日志在 Actions 里更好读
+          PYTHONUNBUFFERED: "1"
+          NO_COLOR: "1"
+        run: pytest -q --junitxml=report.xml
+
+      - name: 上传测试报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-report
+          path: backend/report.xml
+          if-no-files-found: ignore
+
+  frontend:
+    name: 前端 · 类型检查 + 构建
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 安装依赖
+        working-directory: frontend
+        run: npm ci
+
+      - name: 类型检查
+        working-directory: frontend
+        run: npx tsc --noEmit
+
+      - name: 构建
+        working-directory: frontend
+        run: npx vite build
