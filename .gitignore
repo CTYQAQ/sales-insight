@@ -33,8 +33,11 @@ backend/milvus_probe.db/
 backend/milvus_test.db/
 
 # ---- 模型权重：动辄几百 MB，clone 后自己下 ----
-models/
-backend/models/
+# ⚠ 必须用 / 开头锚定仓库根。写成裸的 `models/` 会匹配任意层级的同名目录，
+# 把 backend/app/db/models/（ORM 模型包）一起忽略掉 —— 本地因为有文件看不出问题，
+# CI 上直接 ModuleNotFoundError: No module named 'app.db.models'。
+/models/
+/backend/models/
 
 # ---- 上传目录 ----
 uploads/
