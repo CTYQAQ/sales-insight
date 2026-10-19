@@ -92,7 +92,7 @@ export default function DataIngest() {
 
   return (
     <div>
-      <h2 className="page-title">数据接入</h2>
+      <h1 className="page-title">数据接入</h1>
       <p className="page-desc">支持 Excel / CSV 上传、外部数据库直连、HTTP API 定时拉取三种方式</p>
 
       <Card title="上传销售明细" style={{ marginBottom: 16 }}>
@@ -176,11 +176,12 @@ export default function DataIngest() {
       <Card title="接入任务历史">
         <Table
           rowKey="id" size="small" dataSource={jobs as Record<string, never>[]}
+          pagination={false}
           columns={[
             { title: '数据源', dataIndex: 'datasource_name' },
             { title: '状态', dataIndex: 'status', render: (v: string) => <Tag color={STATUS_COLOR[v]}>{v}</Tag> },
-            { title: '读取', dataIndex: 'rows_read' },
-            { title: '写入', dataIndex: 'rows_written' },
+            { title: '读取', dataIndex: 'rows_read', align: 'right' as const, render: (v: number) => <span className="num">{(v ?? 0).toLocaleString()}</span> },
+            { title: '写入', dataIndex: 'rows_written', align: 'right' as const, render: (v: number) => <span className="num">{(v ?? 0).toLocaleString()}</span> },
             { title: '错误', dataIndex: 'error_message', render: (v?: string) => v ? <Typography.Text type="danger">{v.slice(0, 60)}</Typography.Text> : '-' },
           ]}
         />

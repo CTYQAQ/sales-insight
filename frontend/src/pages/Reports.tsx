@@ -49,7 +49,7 @@ export default function Reports() {
 
   return (
     <div>
-      <h2 className="page-title">AI 销售分析报告</h2>
+      <h1 className="page-title">AI 销售分析报告</h1>
       <p className="page-desc">
         所有数字都由本地 SQL 聚合算出，AI 只负责解读，不会凭空生成数据
       </p>
@@ -78,7 +78,7 @@ export default function Reports() {
               renderItem={(item) => (
                 <List.Item
                   onClick={() => void open(item.id)}
-                  style={{ cursor: 'pointer', background: current?.id === item.id ? '#f0f7ff' : undefined }}
+                  style={{ cursor: 'pointer', background: current?.id === item.id ? '#eeeeee' : undefined, borderRadius: 6 }}
                 >
                   <List.Item.Meta
                     title={<span style={{ fontSize: 13 }}>{item.title}</span>}

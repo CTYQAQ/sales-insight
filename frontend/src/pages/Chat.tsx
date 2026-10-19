@@ -58,10 +58,11 @@ const STATUS_TEXT: Record<string, string> = {
   blocked: '拦截',
 }
 
-const INTENT_META: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  knowledge: { label: '查知识库', color: 'purple', icon: <BulbOutlined /> },
-  data: { label: '查数据', color: 'blue', icon: <DatabaseOutlined /> },
-  chat: { label: '一般对话', color: 'default', icon: <RobotOutlined /> },
+/** 意图标签：彩色预算只给"查数据"（这个产品的核心动作），其余中性灰 */
+const INTENT_META: Record<string, { label: string; tint?: boolean; icon: React.ReactNode }> = {
+  knowledge: { label: '查知识库', icon: <BulbOutlined /> },
+  data: { label: '查数据', tint: true, icon: <DatabaseOutlined /> },
+  chat: { label: '一般对话', icon: <RobotOutlined /> },
 }
 
 type Mode = 'dialog' | 'agent' | 'simple'
@@ -131,7 +132,7 @@ export default function Chat() {
 
   return (
     <div>
-      <h2 className="page-title">对话助手</h2>
+      <h1 className="page-title">对话助手</h1>
       <p className="page-desc">
         自动判断你在问业务口径还是问具体数字：问口径去知识库检索并给出来源，
         问数字走 SQL 查询；生成的 SQL 仍会经过白名单校验与数据权限注入
@@ -183,16 +184,22 @@ export default function Chat() {
 
           {turns.map((t) => (
             <div key={t.key} style={{ marginBottom: 20 }}>
-              <Space align="start" style={{ marginBottom: 8 }}>
-                <Avatar size={28} icon={<UserOutlined />} style={{ background: '#1677ff' }} />
+              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 8 }}>
+                <Avatar size={28} icon={<UserOutlined />} style={{ background: '#141414', flexShrink: 0 }} />
                 <Typography.Text strong style={{ paddingTop: 4 }}>{t.question}</Typography.Text>
-              </Space>
+              </div>
 
-              <Space align="start" style={{ width: '100%' }} styles={{ item: { width: '100%' } }}>
-                <Avatar size={28} icon={<RobotOutlined />} style={{ background: '#722ed1', flexShrink: 0 }} />
+              {/* 不用 Space + styles.item：那会把 100% 宽也套到头像上，答案列被挤成半宽 */}
+              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                <Avatar size={28} icon={<RobotOutlined style={{ color: '#0a0a0a' }} />} style={{ background: '#e9ebee', flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <Space size={6} wrap style={{ marginBottom: 6 }}>
-                    <Tag color={INTENT_META[t.resp.intent]?.color} icon={INTENT_META[t.resp.intent]?.icon}>
+                    <Tag
+                      icon={INTENT_META[t.resp.intent]?.icon}
+                      style={INTENT_META[t.resp.intent]?.tint
+                        ? { background: '#e8effb', color: '#1d5fbf', borderColor: '#c7d9f4' }
+                        : undefined}
+                    >
                       {INTENT_META[t.resp.intent]?.label ?? t.resp.intent}
                     </Tag>
                     <Typography.Text type="secondary" style={{ fontSize: 12 }}>
@@ -223,7 +230,7 @@ export default function Chat() {
                       <Typography.Text type="secondary" style={{ fontSize: 12 }}>参考来源：</Typography.Text>
                       {t.resp.sources.map((s: DialogSource, i) => (
                         <Tooltip key={`${s.source}-${i}`} title={s.source}>
-                          <Tag color="purple" style={{ fontSize: 11, marginTop: 4 }}>
+                          <Tag style={{ fontSize: 11, marginTop: 4 }}>
                             [{i + 1}] {s.title}
                           </Tag>
                         </Tooltip>
@@ -281,7 +288,7 @@ export default function Chat() {
                     />
                   )}
                 </div>
-              </Space>
+              </div>
             </div>
           ))}
 
@@ -429,15 +436,15 @@ function RetrievedList({ items }: { items: RetrievedChunk[] }) {
             <Space size={6} wrap style={{ marginBottom: 2 }}>
               <Tag>[{i + 1}]</Tag>
               <Typography.Text strong style={{ fontSize: 12 }}>{it.title}</Typography.Text>
-              <Tag color={it.bm25_rank > 0 ? 'blue' : 'default'} style={{ fontSize: 11 }}>
+              <Tag style={{ fontSize: 11 }} className="num">
                 BM25 {it.bm25_score.toFixed(2)}
                 {it.bm25_rank > 0 ? ` (#${it.bm25_rank})` : ' 未命中'}
               </Tag>
-              <Tag color={it.vector_rank > 0 ? 'purple' : 'default'} style={{ fontSize: 11 }}>
+              <Tag style={{ fontSize: 11 }} className="num">
                 向量 {it.vector_score.toFixed(3)}
                 {it.vector_rank > 0 ? ` (#${it.vector_rank})` : ' 未命中'}
               </Tag>
-              <Tag color="green" style={{ fontSize: 11 }}>覆盖 {Math.round(it.coverage * 100)}%</Tag>
+              <Tag style={{ fontSize: 11 }} className="num">覆盖 {Math.round(it.coverage * 100)}%</Tag>
             </Space>
             <div style={{ fontSize: 12, color: '#666', whiteSpace: 'pre-wrap' }}>
               {it.text.slice(0, 160)}{it.text.length > 160 ? '…' : ''}

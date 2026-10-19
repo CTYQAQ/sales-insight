@@ -207,8 +207,21 @@ const main = async () => {
       return 'no-button'
     })()
   `)
-  // 等真实 LLM 回答
-  await sleep(9000)
+  // 等真实 LLM 回答：轮询意图标签（查知识库/查数据/一般对话）出现为止，
+  // 固定 sleep 在模型慢的时候会截到"正在检索"的加载态
+  const answered = await (async () => {
+    const start = Date.now()
+    while (Date.now() - start < 45_000) {
+      const ok = await evaluate(
+        `!![...document.querySelectorAll('.ant-tag')].find(t => /查知识库|查数据|一般对话/.test(t.textContent || ''))`,
+      )
+      if (ok) return true
+      await sleep(1000)
+    }
+    return false
+  })()
+  console.log('LLM 应答:', answered)
+  await sleep(1200)
   await shot('02-chat-rag')
 
   console.log('知识库…')

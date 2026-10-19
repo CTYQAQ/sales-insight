@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import {
-  Alert, App as AntApp, Button, Card, Col, Empty, Input, List, Popconfirm,
-  Row, Space, Spin, Statistic, Switch, Table, Tag, Typography, Upload,
+  Alert, App as AntApp, Button, Card, Empty, Input, List, Popconfirm,
+  Space, Spin, Switch, Table, Tag, Typography, Upload,
 } from 'antd'
 import {
-  CloudUploadOutlined, DatabaseOutlined, ReloadOutlined,
+  CloudUploadOutlined, ReloadOutlined,
   SearchOutlined, SyncOutlined, ThunderboltOutlined,
 } from '@ant-design/icons'
 import {
@@ -67,7 +67,7 @@ export default function Knowledge() {
 
   return (
     <div>
-      <h2 className="page-title">知识库</h2>
+      <h1 className="page-title">知识库</h1>
       <p className="page-desc">
         业务口径、流程、排查手册这类"文档型知识"入库后，对话助手才能回答
         "毛利率怎么算"这类问题 —— 数据表里没有这些规则
@@ -81,34 +81,20 @@ export default function Knowledge() {
         />
       )}
 
-      <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col xs={12} sm={6}>
-          <Card><Statistic title="已入库片段" value={stats?.chunks ?? 0} loading={loading} /></Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card><Statistic title="文档数" value={stats?.documents ?? 0} loading={loading} /></Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card>
-            <Statistic
-              title="向量维度"
-              value={stats?.dim ?? 0}
-              loading={loading}
-              prefix={<DatabaseOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card>
-            <Statistic
-              title="检索模式"
-              value={stats?.hybrid ? 'BM25 + 向量' : '纯向量'}
-              loading={loading}
-              valueStyle={{ fontSize: 18 }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* KPI 条：一个容器分四格，替代四张一样的卡片 */}
+      <div className="kpi-strip" style={{ marginBottom: 16 }}>
+        {[
+          { label: '已入库片段', value: (stats?.chunks ?? 0).toLocaleString() },
+          { label: '文档数', value: (stats?.documents ?? 0).toLocaleString() },
+          { label: '向量维度', value: (stats?.dim ?? 0).toLocaleString() },
+          { label: '检索模式', value: stats?.hybrid ? 'BM25 + 向量' : '纯向量' },
+        ].map((c) => (
+          <div className="kpi-cell" key={c.label}>
+            <div className="kpi-label">{c.label}</div>
+            <div className="kpi-value">{loading ? '—' : c.value}</div>
+          </div>
+        ))}
+      </div>
 
       <Card
         title="知识库管理"
@@ -176,8 +162,8 @@ export default function Knowledge() {
             { title: '来源文件', dataIndex: 'source', ellipsis: true },
             { title: '首节标题', dataIndex: 'title', ellipsis: true },
             {
-              title: '片段数', dataIndex: 'chunks', width: 100,
-              render: (v: number) => <Tag color="blue">{v}</Tag>,
+              title: '片段数', dataIndex: 'chunks', width: 100, align: 'right' as const,
+              render: (v: number) => <span className="num">{v.toLocaleString()}</span>,
             },
           ]}
         />
@@ -228,16 +214,18 @@ export default function Knowledge() {
               <List.Item>
                 <div style={{ width: '100%' }}>
                   <Space size={6} wrap style={{ marginBottom: 4 }}>
-                    <Tag color="blue">#{i + 1}</Tag>
+                    <Tag>#{i + 1}</Tag>
                     <Typography.Text strong style={{ fontSize: 13 }}>{it.title}</Typography.Text>
-                    <Tag color="purple" style={{ fontSize: 11 }}>融合 {it.score.toFixed(4)}</Tag>
-                    <Tag color={it.bm25_rank > 0 ? 'blue' : 'default'} style={{ fontSize: 11 }}>
+                    <Tag style={{ fontSize: 11, background: '#e8effb', color: '#1d5fbf', borderColor: '#c7d9f4' }} className="num">
+                      融合 {it.score.toFixed(4)}
+                    </Tag>
+                    <Tag style={{ fontSize: 11 }} className="num">
                       BM25 {it.bm25_score.toFixed(2)}{it.bm25_rank > 0 ? ` (#${it.bm25_rank})` : ' 未命中'}
                     </Tag>
-                    <Tag color={it.vector_rank > 0 ? 'purple' : 'default'} style={{ fontSize: 11 }}>
+                    <Tag style={{ fontSize: 11 }} className="num">
                       向量 {it.vector_score.toFixed(3)}{it.vector_rank > 0 ? ` (#${it.vector_rank})` : ' 未命中'}
                     </Tag>
-                    <Tag color="green" style={{ fontSize: 11 }}>覆盖 {Math.round(it.coverage * 100)}%</Tag>
+                    <Tag style={{ fontSize: 11 }} className="num">覆盖 {Math.round(it.coverage * 100)}%</Tag>
                   </Space>
                   <div style={{ fontSize: 12, color: '#666', whiteSpace: 'pre-wrap' }}>
                     {it.text.slice(0, 240)}{it.text.length > 240 ? '…' : ''}

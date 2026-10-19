@@ -14,12 +14,23 @@ import Chat from './pages/Chat'
 import Knowledge from './pages/Knowledge'
 import Users from './pages/Users'
 
-const { Sider, Content, Header } = Layout
+const { Sider, Content } = Layout
 
 const ROLE_LABEL: Record<string, string> = {
   admin: '管理员',
   analyst: '分析师',
   viewer: '查看者',
+}
+
+/** 产品标记：三根账柱，最后一根用唯一的数据 hue —— hue 只出现在数据相关处 */
+function BrandMark() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+      <rect x="2" y="9" width="4" height="9" rx="1" fill="#141414" />
+      <rect x="9" y="5" width="4" height="13" rx="1" fill="#141414" />
+      <rect x="16" y="2" width="4" height="16" rx="1" fill="#1d5fbf" />
+    </svg>
+  )
 }
 
 function Shell() {
@@ -41,46 +52,57 @@ function Shell() {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider theme="light" width={200} style={{ borderRight: '1px solid #f0f0f0' }}>
-        <div style={{ padding: '18px 16px', fontWeight: 600, fontSize: 15 }}>
-          销售智能分析
+      {/* open plane 壳：侧栏与页面同底色，无顶栏；用户信息收到侧栏底部 */}
+      <Sider
+        className="app-sider"
+        width={232}
+        breakpoint="lg"
+        collapsedWidth={0}
+        style={{ display: 'flex', flexDirection: 'column' }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <div className="app-brand">
+            <BrandMark />
+            <div>
+              <div className="app-brand-name">销售智能分析</div>
+              <div className="app-brand-sub">Sales Insight</div>
+            </div>
+          </div>
+          {/* 关键：走客户端路由。以前这里写的是 window.location.href = key，
+              每次点菜单都是一次整页刷新，内存里的 access token 当场归零，
+              于是表现为"点哪都要重新登录"。 */}
+          <Menu
+            mode="inline"
+            selectedKeys={[loc.pathname]}
+            items={items}
+            onClick={({ key }) => navigate(key)}
+            style={{ flex: 1 }}
+          />
+          <div className="app-sider-foot">
+            <span className="user-line">
+              {user?.username}
+              <Tag style={{ marginInlineEnd: 0 }}>{ROLE_LABEL[user?.role ?? 'viewer']}</Tag>
+            </span>
+            <span>
+              {user?.region_scope?.length
+                ? `数据范围：${user.region_scope.join(' / ')}`
+                : '数据范围：全部区域'}
+            </span>
+            <a onClick={logout}>退出登录</a>
+          </div>
         </div>
-        {/* 关键：走客户端路由。以前这里写的是 window.location.href = key，
-            每次点菜单都是一次整页刷新，内存里的 access token 当场归零，
-            于是表现为"点哪都要重新登录"。 */}
-        <Menu mode="inline" selectedKeys={[loc.pathname]} items={items} onClick={({ key }) => navigate(key)} />
       </Sider>
-      <Layout>
-        <Header
-          style={{
-            background: '#fff', padding: '0 20px', display: 'flex',
-            alignItems: 'center', justifyContent: 'space-between',
-            borderBottom: '1px solid #f0f0f0',
-          }}
-        >
-          <Typography.Text type="secondary">
-            {user?.region_scope?.length
-              ? `数据范围：${user.region_scope.join(' / ')}`
-              : '数据范围：全部区域'}
-          </Typography.Text>
-          <span>
-            <Tag color="blue">{ROLE_LABEL[user?.role ?? 'viewer']}</Tag>
-            <Typography.Text strong style={{ marginRight: 12 }}>{user?.username}</Typography.Text>
-            <a onClick={logout}>退出</a>
-          </span>
-        </Header>
-        <Content style={{ padding: 20 }}>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/ingest" element={<DataIngest />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/knowledge" element={<Knowledge />} />
-            <Route path="/users" element={user?.role === 'admin' ? <Users /> : <Navigate to="/" />} />
-          </Routes>
-        </Content>
-      </Layout>
+      <Content style={{ padding: '28px 32px', maxWidth: 1400 }}>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/ingest" element={<DataIngest />} />
+          <Route path="/reports" element={<Reports />} />
+          <Route path="/alerts" element={<Alerts />} />
+          <Route path="/chat" element={<Chat />} />
+          <Route path="/knowledge" element={<Knowledge />} />
+          <Route path="/users" element={user?.role === 'admin' ? <Users /> : <Navigate to="/" />} />
+        </Routes>
+      </Content>
     </Layout>
   )
 }

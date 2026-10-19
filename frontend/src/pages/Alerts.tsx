@@ -57,7 +57,7 @@ export default function Alerts() {
 
   return (
     <div>
-      <h2 className="page-title">异常告警</h2>
+      <h1 className="page-title">异常告警</h1>
       <p className="page-desc">
         规则巡检后自动推送钉钉/企业微信/邮件；同一规则同一维度在冷却期内只报一次，不会刷屏
       </p>
@@ -76,7 +76,12 @@ export default function Alerts() {
             { title: '名称', dataIndex: 'name' },
             { title: '指标', dataIndex: 'metric', render: (v: string) => METRIC[v] ?? v },
             { title: '维度', dataIndex: 'dimension', render: (v: string) => DIMENSION[v] ?? v },
-            { title: '条件', render: (_, r) => `${COMPARATOR[r.comparator]} ${r.threshold}${r.comparator.includes('pct') ? '%' : ''}` },
+            {
+              title: '条件', align: 'right' as const,
+              render: (_, r) => (
+                <span className="num">{COMPARATOR[r.comparator]} {r.threshold}{r.comparator.includes('pct') ? '%' : ''}</span>
+              ),
+            },
             { title: '级别', dataIndex: 'severity', render: (v: string) => <Tag color={v === 'critical' ? 'red' : 'orange'}>{v}</Tag> },
             { title: '启用', dataIndex: 'enabled', render: (v: boolean) => <Tag color={v ? 'green' : 'default'}>{v ? '是' : '否'}</Tag> },
             { title: '最近触发', dataIndex: 'last_triggered_at', render: (v?: string) => v ? v.slice(0, 16) : '-' },
@@ -103,7 +108,10 @@ export default function Alerts() {
           columns={[
             { title: '规则', dataIndex: 'rule_name' },
             { title: '对象', dataIndex: 'dimension_key' },
-            { title: '实际值', dataIndex: 'actual_value' },
+            {
+              title: '实际值', dataIndex: 'actual_value', align: 'right' as const,
+              render: (v: number) => <span className="num">{typeof v === 'number' ? v.toLocaleString() : v ?? '-'}</span>,
+            },
             { title: '时间', dataIndex: 'created_at', render: (v?: string) => v ? v.slice(0, 16) : '-' },
             { title: '说明', dataIndex: 'message', render: (v: string) => <Typography.Text style={{ fontSize: 12 }}>{v}</Typography.Text> },
             {

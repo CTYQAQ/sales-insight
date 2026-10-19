@@ -28,8 +28,14 @@ export default function Login() {
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: 16 }}>
-      <Card style={{ width: 380, borderRadius: 12 }} styles={{ body: { padding: 32 } }}>
-        <Typography.Title level={4} style={{ marginBottom: 4 }}>销售智能分析平台</Typography.Title>
+      <Card style={{ width: 380 }} styles={{ body: { padding: 32 } }}>
+        {/* 产品标记：三根账柱，最高那根用唯一的数据 hue */}
+        <svg width="30" height="30" viewBox="0 0 22 22" aria-hidden="true" style={{ marginBottom: 12 }}>
+          <rect x="2" y="9" width="4" height="9" rx="1" fill="#141414" />
+          <rect x="9" y="5" width="4" height="13" rx="1" fill="#141414" />
+          <rect x="16" y="2" width="4" height="16" rx="1" fill="#1d5fbf" />
+        </svg>
+        <Typography.Title level={4} style={{ marginBottom: 4, marginTop: 0 }}>销售智能分析平台</Typography.Title>
         <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 24, fontSize: 13 }}>
           企业销售数据自动分析与预警
         </Typography.Text>

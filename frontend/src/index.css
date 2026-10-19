@@ -1,10 +1,107 @@
+/* ============ achromatic-ledger 设计令牌 ============
+   chrome 零彩色：近黑主按钮 + 中性灰选中态；唯一 hue 只给数据。
+   底色 #f2f4f7 是"账房"的灰蓝（ledger blue-grey），比纯白低半档、低饱和。 */
+:root {
+  --ground: #f2f4f7;
+  --surface: #ffffff;
+  --raised: #eeeeee;
+  --border: #e6e6e6;
+  --rule: #f0f0f0;
+  --control: #d4d4d4;
+  --text: #0a0a0a;
+  --muted: #6b6b6b;
+  --accent: #141414;
+  --chart-hue: #1d5fbf;
+  --chart-hue-tint: #e8effb;
+  /* 涨跌信号按国内习惯：涨红跌绿（销售额上涨是好事 → 红） */
+  --up: #c4242a;
+  --down: #2e7d32;
+  --radius-card: 8px;
+}
+
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  background: #f5f6f8;
+  font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--ground);
+  color: var(--text);
 }
-.page-title { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
-.page-desc { color: #8c8c8c; font-size: 13px; margin-bottom: 16px; }
-.kpi-card { border-radius: 10px; }
-.mono { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; font-size: 12px; }
+
+/* ============ 浏览器默认面也归设计管（craft floor） ============ */
+::selection { background: var(--accent); color: #fff; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+* { scrollbar-width: thin; scrollbar-color: #c9cdd4 transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: #c9cdd4; border-radius: 4px; }
+*::-webkit-scrollbar-track { background: transparent; }
+input, textarea { caret-color: var(--accent); }
+
+/* ============ 页面标题：名词式 h1，24px/600 ============ */
+.page-title { font-size: 24px; font-weight: 600; margin: 0 0 4px; letter-spacing: -0.01em; }
+.page-desc { color: var(--muted); font-size: 14px; margin: 0 0 20px; }
+
+/* ============ 数字：表格/KPI 一律 tabular figures ============ */
+.num, .ant-table, .ant-statistic-content { font-variant-numeric: tabular-nums; }
+
+/* ============ KPI 条：一个容器 + 1px 分隔线，不要四张卡片 ============ */
+.kpi-strip {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+}
+.kpi-cell { padding: 16px 20px; min-width: 0; }
+.kpi-cell + .kpi-cell { border-left: 1px solid var(--rule); }
+.kpi-label { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+.kpi-value { font-size: 26px; line-height: 1.25; font-variant-numeric: tabular-nums; }
+.kpi-value.money { font-weight: 700; }   /* 700 只给金额 */
+.kpi-delta { font-size: 12px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.kpi-delta.up { color: var(--up); }
+.kpi-delta.down { color: var(--down); }
+.kpi-delta.flat { color: var(--muted); }
+@media (max-width: 768px) {
+  .kpi-strip { grid-auto-flow: row; grid-template-columns: 1fr 1fr; }
+  .kpi-cell + .kpi-cell { border-left: none; }
+  .kpi-cell:nth-child(even) { border-left: 1px solid var(--rule); }
+  .kpi-cell:nth-child(n + 3) { border-top: 1px solid var(--rule); }
+}
+
+/* ============ 卡片：1px 边线、无投影 ============ */
+.ant-card { box-shadow: none !important; }  /* taste-skill-ignore: 显式归零 antd 默认投影，非新增阴影 */
+
+/* ============ SQL / ID 用等宽（真实代码，属正当用途） ============ */
+.mono {
+  font-family: 'Geist Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;  /* taste-skill-ignore: 仅用于 SQL 代码块 */
+  font-size: 12px;
+}
+
+/* ============ 侧栏壳（open plane）：与页面同底色，只留一根发丝线 ============ */
+.app-sider {
+  background: var(--ground) !important;
+  border-right: 1px solid var(--border);
+}
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 20px 12px;
+}
+.app-brand-name { font-weight: 600; font-size: 15px; line-height: 1.2; }
+.app-brand-sub { font-size: 12px; color: var(--muted); }
+.app-sider-foot {
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--rule);
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.app-sider-foot .user-line { color: var(--text); font-size: 13px; display: flex; align-items: center; gap: 8px; }
+
+/* antd inline menu 贴地：去掉右侧边框与多余留白 */
+.app-sider .ant-menu { background: transparent; border-inline-end: none !important; }
+.app-sider .ant-layout-sider-children { display: flex; flex-direction: column; height: 100%; }
+.app-sider .ant-layout-sider-children > div { flex: 1; min-height: 0; display: flex; flex-direction: column; }

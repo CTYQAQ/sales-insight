@@ -68,3 +68,4 @@ frontend/.vite/
 .DS_Store
 Thumbs.db
 *.log
+.taste-skill/

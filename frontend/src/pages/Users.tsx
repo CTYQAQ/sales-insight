@@ -3,7 +3,8 @@ import { App as AntApp, Button, Card, Form, Input, Modal, Select, Table, Tag } f
 import { authApi, type UserInfo } from '../api/api'
 import { errMsg } from '../api/client'
 
-const ROLE_COLOR: Record<string, string> = { admin: 'red', analyst: 'blue', viewer: 'default' }
+// 角色标签不用彩色：admin 用实心墨色，其余中性灰 —— 彩色预算只给数据与告警状态
+const ROLE_COLOR: Record<string, string> = { admin: '#141414', analyst: 'default', viewer: 'default' }
 const ROLE_LABEL: Record<string, string> = { admin: '管理员', analyst: '分析师', viewer: '查看者' }
 
 export default function Users() {
@@ -31,7 +32,7 @@ export default function Users() {
 
   return (
     <div>
-      <h2 className="page-title">用户管理</h2>
+      <h1 className="page-title">用户管理</h1>
       <p className="page-desc">
         区域范围留空表示可看全部区域；填写后该用户所有看板、报告、对话查询都只会命中这些区域
       </p>
@@ -45,7 +46,7 @@ export default function Users() {
             { title: '角色', dataIndex: 'role', render: (v: string) => <Tag color={ROLE_COLOR[v]}>{ROLE_LABEL[v]}</Tag> },
             {
               title: '可见区域', dataIndex: 'region_scope',
-              render: (v: string[]) => v?.length ? v.map((r) => <Tag key={r}>{r}</Tag>) : <Tag color="green">全部</Tag>,
+              render: (v: string[]) => v?.length ? v.map((r) => <Tag key={r}>{r}</Tag>) : <Tag>全部</Tag>,
             },
             { title: '状态', dataIndex: 'is_active', render: (v: boolean) => <Tag color={v ? 'green' : 'default'}>{v ? '启用' : '停用'}</Tag> },
             { title: '创建时间', dataIndex: 'created_at', render: (v?: string) => v?.slice(0, 16) ?? '-' },
