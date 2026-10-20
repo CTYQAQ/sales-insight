@@ -57,6 +57,8 @@ input, textarea { caret-color: var(--accent); }
 .kpi-label { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
 .kpi-value { font-size: 26px; line-height: 1.25; font-variant-numeric: tabular-nums; }
 .kpi-value.money { font-weight: 700; }   /* 700 只给金额 */
+/* 文本型 KPI（如"BM25 + 向量"）不是数字，别用数字号——四个格子的视觉重量才平 */
+.kpi-value.text { font-size: 15px; font-weight: 500; line-height: 1.9; }
 .kpi-delta { font-size: 12px; margin-top: 2px; font-variant-numeric: tabular-nums; }
 .kpi-delta.up { color: var(--up); }
 .kpi-delta.down { color: var(--down); }

@@ -87,11 +87,11 @@ export default function Knowledge() {
           { label: '已入库片段', value: (stats?.chunks ?? 0).toLocaleString() },
           { label: '文档数', value: (stats?.documents ?? 0).toLocaleString() },
           { label: '向量维度', value: (stats?.dim ?? 0).toLocaleString() },
-          { label: '检索模式', value: stats?.hybrid ? 'BM25 + 向量' : '纯向量' },
+          { label: '检索模式', value: stats?.hybrid ? 'BM25 + 向量' : '纯向量', text: true },
         ].map((c) => (
           <div className="kpi-cell" key={c.label}>
             <div className="kpi-label">{c.label}</div>
-            <div className="kpi-value">{loading ? '—' : c.value}</div>
+            <div className={`kpi-value${'text' in c && c.text ? ' text' : ''}`}>{loading ? '—' : c.value}</div>
           </div>
         ))}
       </div>

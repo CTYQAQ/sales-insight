@@ -232,7 +232,9 @@ const main = async () => {
 
   console.log('数据接入…')
   await goto('/ingest')
-  await sleep(2000)
+  // 整页加载要先恢复会话（refresh cookie），2s 在冷缓存下不够，会拍到灰底空页
+  await waitFor('.ant-table-row, .ant-upload', 8000)
+  await sleep(1200)
   await shot('04-ingest')
 
   console.log('设置…')

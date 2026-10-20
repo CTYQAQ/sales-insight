@@ -7,10 +7,16 @@ import { errMsg } from '../api/client'
 import { PREFS_EVENT, readPrefDays, readPrefUnit } from './Settings'
 
 /** 金额单位偏好在「设置 → 看板偏好」里改：auto 按量级自动，wan 一律万元 */
-const fmtMoney = (v: number) =>
-  readPrefUnit() === 'wan' ? `¥${(v / 1_0000).toFixed(1)} 万` :
-  v >= 1_0000_0000 ? `¥${(v / 1_0000_0000).toFixed(2)} 亿` :
-  v >= 1_0000 ? `¥${(v / 1_0000).toFixed(1)} 万` : `¥${v.toFixed(0)}`
+// 用绝对值判断单位：环比跌幅是负数，原来的 `v >= 1_0000` 永远不成立，
+// 导致异动表的差额全显示成 ¥-180263 这种裸数字，既没单位也没有千分位。
+const fmtMoney = (v: number) => {
+  const a = Math.abs(v)
+  const sign = v < 0 ? '-' : ''
+  if (readPrefUnit() === 'wan') return `¥${sign}${(a / 1_0000).toFixed(1)} 万`
+  if (a >= 1_0000_0000) return `¥${sign}${(a / 1_0000_0000).toFixed(2)} 亿`
+  if (a >= 1_0000) return `¥${sign}${(a / 1_0000).toFixed(1)} 万`
+  return `¥${sign}${a.toFixed(0)}`
+}
 
 const CHART_HUE = '#1d5fbf'
 const AXIS_GREY = '#6b6b6b'
@@ -165,6 +171,7 @@ export default function Dashboard() {
       // scale: true 让 y 轴从数据最小值附近起，波动区充满绘图区而不是只占上 2/3。
       // 趋势图看的是"变化形状"，不是绝对量级，不从 0 起不会误导（KPI 卡已给绝对值）。
       scale: true,
+      splitNumber: 3,   // 7 根网格线太密；ECharts 只把 splitNumber 当建议值，3 段能稳在 5 根内
       ...axisBase,
       splitLine: { lineStyle: { color: GRID_LINE } },
       axisLabel: { ...axisBase.axisLabel, formatter: (v: number) => `${(v / 10000).toFixed(0)}万` },

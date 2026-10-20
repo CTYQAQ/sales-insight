@@ -379,16 +379,28 @@ export default function Chat() {
             renderItem={(h) => (
               <List.Item
                 onClick={() => { const question = String(h.question); setQ(question); void ask(question) }}
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: 'pointer', padding: '9px 0' }}
               >
-                <List.Item.Meta
-                  title={<span style={{ fontSize: 13 }}>{String(h.question)}</span>}
-                  description={h.status === 'blocked'
-                    ? <Typography.Text type="danger" style={{ fontSize: 12 }}>已被安全策略拦截</Typography.Text>
+                {/* 单行：问题在左，时间在右。原来 title+description 两行，5 条就吃掉 300px */}
+                <div style={{
+                  display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+                  gap: 16, width: '100%',
+                }}>
+                  <span style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {String(h.question)}
+                  </span>
+                  {h.status === 'blocked'
+                    ? <span style={{ fontSize: 12, color: 'var(--up)', flexShrink: 0 }}>已拦截</span>
                     : <Tooltip title={String(h.sql ?? '')}>
-                        <span style={{ fontSize: 12 }}>{String(h.created_at ?? '').slice(0, 16)}</span>
+                        <span style={{
+                          fontSize: 12, color: 'var(--muted)', flexShrink: 0,
+                          fontVariantNumeric: 'tabular-nums',
+                        }}>
+                          {/* ISO 串切出来是 10-20T02:58，T 要换成空格 */}
+                          {String(h.created_at ?? '').slice(5, 16).replace('T', ' ')}
+                        </span>
                       </Tooltip>}
-                />
+                </div>
               </List.Item>
             )}
           />

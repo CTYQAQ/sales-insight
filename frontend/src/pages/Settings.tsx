@@ -40,7 +40,7 @@ function Section({
       <div
         style={{
           background: 'var(--surface)', border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-card)', padding: 20, maxWidth: 760,
+          borderRadius: 'var(--radius-card)', padding: '20px 24px',
         }}
       >
         {children}
@@ -51,8 +51,8 @@ function Section({
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-      <span style={{ fontSize: 13, width: 104, flexShrink: 0 }}>{label}</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 14 }}>
+      <span style={{ fontSize: 13, width: 140, flexShrink: 0 }}>{label}</span>
       {children}
     </div>
   )
@@ -231,7 +231,7 @@ export default function Settings() {
               {vendor.needs_key && (
                 <Field label="API Key">
                   <Input.Password
-                    style={{ maxWidth: 320 }}
+                    style={{ maxWidth: 520 }}
                     placeholder={vendor.api_key_set ? `当前：${vendor.api_key_masked}（留空保持不变）` : `未配置 ${provider.toUpperCase()}_API_KEY`}
                     value={conf.key}
                     onChange={(e) => setConf('key', e.target.value)}
@@ -239,10 +239,10 @@ export default function Settings() {
                 </Field>
               )}
               <Field label="接口地址">
-                <Input style={{ maxWidth: 380 }} value={conf.base} onChange={(e) => setConf('base', e.target.value)} />
+                <Input style={{ maxWidth: 520 }} value={conf.base} onChange={(e) => setConf('base', e.target.value)} />
               </Field>
               <Field label="模型">
-                <Input style={{ maxWidth: 320 }} value={conf.model} onChange={(e) => setConf('model', e.target.value)} />
+                <Input style={{ maxWidth: 520 }} value={conf.model} onChange={(e) => setConf('model', e.target.value)} />
               </Field>
             </>
           )
@@ -279,7 +279,7 @@ export default function Settings() {
         {embBackend !== 'local' && (
           <>
             <Field label="模型名">
-              <Input style={{ maxWidth: 320 }} value={embModel} onChange={(e) => setEmbModel(e.target.value)} />
+              <Input style={{ maxWidth: 520 }} value={embModel} onChange={(e) => setEmbModel(e.target.value)} />
             </Field>
             <Field label="向量维度">
               <InputNumber min={64} max={4096} value={embDim} onChange={(v) => setEmbDim(Number(v))} />
@@ -289,11 +289,11 @@ export default function Settings() {
         {embBackend === 'api' && (
           <>
             <Field label="接口地址">
-              <Input style={{ maxWidth: 320 }} value={embBase} onChange={(e) => setEmbBase(e.target.value)} />
+              <Input style={{ maxWidth: 520 }} value={embBase} onChange={(e) => setEmbBase(e.target.value)} />
             </Field>
             <Field label="API Key">
               <Input.Password
-                style={{ maxWidth: 320 }}
+                style={{ maxWidth: 520 }}
                 placeholder={snap?.rag.embedding_api_key_set ? '已配置（留空保持不变）' : '未配置'}
                 value={embKey}
                 onChange={(e) => setEmbKey(e.target.value)}
@@ -321,7 +321,7 @@ export default function Settings() {
           <>
             <Field label="Webhook">
               <Input
-                style={{ maxWidth: 380 }}
+                style={{ maxWidth: 520 }}
                 placeholder={snap?.notify.webhook_url_set ? `当前：${snap.notify.webhook_url_masked}（留空保持不变）` : '粘贴机器人 Webhook 地址'}
                 value={whUrl}
                 onChange={(e) => setWhUrl(e.target.value)}
@@ -352,7 +352,7 @@ export default function Settings() {
           />
         </Field>
         <Field label="收件人">
-          <Input style={{ maxWidth: 320 }} placeholder="多个用英文逗号分隔" value={emailTo} onChange={(e) => setEmailTo(e.target.value)} />
+          <Input style={{ maxWidth: 520 }} placeholder="多个用英文逗号分隔" value={emailTo} onChange={(e) => setEmailTo(e.target.value)} />
         </Field>
         <Field label="">
           <Button size="small" loading={notifyTest === 'email'} onClick={() => void runNotifyTest('email')}>发送测试邮件</Button>

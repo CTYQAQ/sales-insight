@@ -8,7 +8,12 @@ import { ingestApi, type DataSourceItem, type IngestResult, type PreviewResp } f
 import { errMsg } from '../api/client'
 
 const TYPE_LABEL: Record<string, string> = { file: '文件', database: '数据库', api: 'API' }
-const STATUS_COLOR: Record<string, string> = { success: 'green', failed: 'red', running: 'blue', pending: 'default' }
+const STATUS_LABEL: Record<string, string> = { success: '成功', failed: '失败', running: '运行中', pending: '等待中' }
+
+/** 状态标签保持中性：正常不该靠颜色喊，只有"失败"值得用危险色 */
+const StatusTag = ({ v }: { v: string }) => (
+  <Tag color={v === 'failed' ? 'red' : undefined}>{STATUS_LABEL[v] ?? v}</Tag>
+)
 
 export default function DataIngest() {
   const { message } = AntApp.useApp()
@@ -154,7 +159,7 @@ export default function DataIngest() {
           columns={[
             { title: '名称', dataIndex: 'name' },
             { title: '类型', dataIndex: 'type', render: (v: string) => <Tag>{TYPE_LABEL[v] ?? v}</Tag> },
-            { title: '最近状态', dataIndex: 'last_status', render: (v: string) => v ? <Tag color={STATUS_COLOR[v]}>{v}</Tag> : <Tag>未运行</Tag> },
+            { title: '最近状态', dataIndex: 'last_status', render: (v: string) => v ? <StatusTag v={v} /> : <Tag>未运行</Tag> },
             {
               title: '操作',
               render: (_, r) => (
@@ -179,7 +184,7 @@ export default function DataIngest() {
           pagination={false}
           columns={[
             { title: '数据源', dataIndex: 'datasource_name' },
-            { title: '状态', dataIndex: 'status', render: (v: string) => <Tag color={STATUS_COLOR[v]}>{v}</Tag> },
+            { title: '状态', dataIndex: 'status', render: (v: string) => <StatusTag v={v} /> },
             { title: '读取', dataIndex: 'rows_read', align: 'right' as const, render: (v: number) => <span className="num">{(v ?? 0).toLocaleString()}</span> },
             { title: '写入', dataIndex: 'rows_written', align: 'right' as const, render: (v: number) => <span className="num">{(v ?? 0).toLocaleString()}</span> },
             { title: '错误', dataIndex: 'error_message', render: (v?: string) => v ? <Typography.Text type="danger">{v.slice(0, 60)}</Typography.Text> : '-' },
