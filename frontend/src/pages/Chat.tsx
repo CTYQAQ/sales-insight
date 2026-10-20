@@ -86,7 +86,8 @@ export default function Chat() {
   const bottomRef = useRef<HTMLDivElement>(null)
 
   const loadHistory = async () => {
-    try { setHistory(await aiApi.chatHistory(8)) } catch { /* 历史加载失败不影响主流程 */ }
+    // 侧栏"最近提问"只作入口，5 行足够；8 行在演示数据下全是重复问题
+    try { setHistory(await aiApi.chatHistory(5)) } catch { /* 历史加载失败不影响主流程 */ }
   }
   useEffect(() => { void loadHistory() }, [])
 

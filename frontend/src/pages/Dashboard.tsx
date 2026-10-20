@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { App as AntApp, Card, Col, Empty, Row, Segmented, Select, Spin, Table, Typography } from 'antd'
+import { App as AntApp, Card, Col, Empty, Row, Segmented, Select, Skeleton, Table, Typography } from 'antd'
 import ReactECharts from 'echarts-for-react'
 import dayjs from 'dayjs'
 import { metricsApi, type BreakItem, type SummaryResp, type TrendItem } from '../api/api'
@@ -114,7 +114,24 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dim])
 
-  if (loading) return <div style={{ textAlign: 'center', padding: 80 }}><Spin size="large" tip="加载中" /></div>
+  // 加载态画最终版型的骨架：KPI 条与图表的框先立住，数据落地时布局不跳动
+  if (loading) {
+    return (
+      <div>
+        <h1 className="page-title">销售看板</h1>
+        <p className="page-desc">数据加载中…</p>
+        <div className="kpi-strip" style={{ marginBottom: 16 }}>
+          {[0, 1, 2, 3].map((i) => (
+            <div className="kpi-cell" key={i}>
+              <div className="kpi-label">&nbsp;</div>
+              <Skeleton.Button active size="small" style={{ width: 96, height: 26 }} />
+            </div>
+          ))}
+        </div>
+        <Card><Skeleton active paragraph={{ rows: 6 }} title={false} /></Card>
+      </div>
+    )
+  }
 
   if (!hasData) {
     return (
@@ -134,7 +151,8 @@ export default function Dashboard() {
   const trendOption = {
     textStyle: { fontFamily: CHART_FONT },
     tooltip: { trigger: 'axis' as const },
-    grid: { left: 56, right: 24, top: 24, bottom: 32 },
+    // right 留出末端数值标注的位置，避免被裁切
+    grid: { left: 56, right: 72, top: 24, bottom: 32 },
     xAxis: {
       type: 'category' as const,
       data: trend.map((t) => t.date),
@@ -144,6 +162,9 @@ export default function Dashboard() {
     },
     yAxis: {
       type: 'value' as const,
+      // scale: true 让 y 轴从数据最小值附近起，波动区充满绘图区而不是只占上 2/3。
+      // 趋势图看的是"变化形状"，不是绝对量级，不从 0 起不会误导（KPI 卡已给绝对值）。
+      scale: true,
       ...axisBase,
       splitLine: { lineStyle: { color: GRID_LINE } },
       axisLabel: { ...axisBase.axisLabel, formatter: (v: number) => `${(v / 10000).toFixed(0)}万` },
@@ -155,6 +176,14 @@ export default function Dashboard() {
       symbol: 'none',
       itemStyle: { color: CHART_HUE },
       lineStyle: { width: 2, color: CHART_HUE },
+      // 末端标注最新值：图自己说话，读者不用回查 tooltip
+      endLabel: {
+        show: true,
+        color: '#0a0a0a',
+        fontSize: 12,
+        fontFamily: CHART_FONT,
+        formatter: (p: { value: number }) => fmtMoney(p.value),
+      },
     }],
   }
 
@@ -176,7 +205,8 @@ export default function Dashboard() {
     series: [{
       type: 'bar' as const,
       data: breakdown.map((b) => b.revenue).reverse(),
-      barMaxWidth: 18,
+      // 维度少时（3 根）柱太细显得空隙过大，放宽到 26
+      barMaxWidth: 26,
       // 直角柱；唯一的 hue 给这个主数据元素
       itemStyle: { color: CHART_HUE },
       label: {
